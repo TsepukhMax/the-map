@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import * as L from 'leaflet';
+import { MapService } from '../../../services/map.service';
 
 @Component({
   selector: 'app-map',
@@ -8,22 +9,29 @@ import * as L from 'leaflet';
   standalone: false,
 })
 export class MapComponent implements OnInit {
+  private map!: L.Map;
+
+  constructor(private mapService: MapService){}
+
   ngOnInit() {
     this.initializeMap();
   }
 
   initializeMap() {
     // Створюємо карту
-    const map = L.map('map').setView([51.505, -0.09], 13); // координати та зум
+    this.map = L.map('map').setView([51.505, -0.09], 13); // координати та зум
 
     // Додаємо плитки (ти можеш змінити на бажане джерело)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    }).addTo(this.map);
 
-    // Додаємо маркер
-    L.marker([51.5, -0.09]).addTo(map)
-      .bindPopup('<b>Hello world!</b><br />I am a popup.')
-      .openPopup();
+    // Додаємо обробник кліку, щоб передавати координати в MapService
+    this.map.on('click', (event: L.LeafletMouseEvent) => {
+      this.mapService.addMarker(event.latlng.lat, event.latlng.lng);
+    });
+
+    // Передаємо карту в MapService для подальшого використання в MarkerComponent
+    this.mapService.setMapInstance(this.map);
   }
 }
